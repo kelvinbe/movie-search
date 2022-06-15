@@ -6,60 +6,59 @@ import Search from './Search'
 
 function Movieform(props) {
 
-    const [movies, setMovies] = useState([])
-    const [name, setName] = useState('')
-    const [ratings, setRating] = useState(null)
-    const [duration, setDuration] = useState('')
-    const [error, setError] = useState(false)
+  const initialData = {_name_: '', _rating_: '', _duration_: ''}
+  const [formData, setFormData] = useState(initialData)
+  const [movie, setMovies] = useState([])
+  const [error, setError] = useState(false)
+  const [searchTearm, setTearm] = useState('')
+  const [results, setResults] = useState(false)
 
-    const handleName = (e) => {
-      console.log(e.target.value)
+  const handleChange = (e) => {
 
-      setName(e.target.value)
-    }
-    const handleRating = (e) => {
-      console.log(e.target.value)
+    const {name, value} = e.target
+    console.log('name', name)
+    console.log('valueee', typeof value)
 
-      setRating(e.target.value)
-      
-    }
-    const handleDuration = (e) => {
-      console.log(e.target.value) 
-      if(e.target.value.length > 0){
-        setError(false)
-      }
-      setDuration(e.target.value)
-      
+
+    if(name === '_duration_' && value.length > 0){
+      setError(false)
     }
 
-    const handleAddMovie = () => {
-      if(!duration.includes('m') || duration.includes('h')){
-          console.log('duration', duration)
-          
-          
-          setError(true)
-      }
+    setFormData({...formData, [name]: value})
 
-      if(duration.includes('m')){
-        const numDuration = parseInt(duration)
-        const hrs = Math.floor(numDuration / 60)
-        hrs.toString()
-        return setDuration(hrs)
-        
-      }
-      console.log('duration', duration)
 
-        const newMovie = {
-          'movieName': name,
-          'Rating': ratings,
-          'duration': duration
-        }
-        console.log(newMovie)
-       setMovies([...movies, newMovie])
-       console.log(movies)
+  }
 
+
+  const onSubmit = () => {
+    if(formData._duration_ === '' || formData._name_ === '' || formData._rating_ === '') return 
+    if(!(formData._duration_.includes('h') || formData._duration_.includes('m'))){
+      setError(true)
+    }else if(formData._duration_.includes('m')){
+          const sec = parseInt(formData._duration_) * 60
+          const newMovie = {
+            _name_: formData._name_,
+            _rating_: formData._rating_,
+            _duration_: sec
+          }
+          setMovies([...movie, newMovie])
+                 
+    }else{
+      const reg = /h+/g
+      const hours = formData._duration_.replace(reg, '')
+      const sec = Number(hours) * 3600
+      if(isNaN(sec)){return setError(true)}
+      const newMovie = {
+          _name_: formData._name_,
+          _rating_: formData._rating_,
+          _duration_: sec
+        }  
+      setMovies([...movie, newMovie])
     }
+  }
 
+  console.log('data', formData)
+  console.log('movie', movie)
 const Form = () => {
 
   return (
@@ -72,9 +71,9 @@ const Form = () => {
               type='text' 
               id='name'
               placeholder='Enter Movie Name'
-              data-testid='nameInput'
-              onChange={handleName}
-              value={name}
+              data-testid='nameInput' 
+              name='_name_'
+              onChange={handleChange}
             />
           </div>
           <div className='layout-column mb-15'>
@@ -84,9 +83,9 @@ const Form = () => {
               id='ratings'
               placeholder='Enter Rating on a scale of 1 to 100'
               data-testid='ratingsInput'
-              onChange={handleRating}
-              value={ratings}
-            />
+              name='_rating_'
+              onChange={handleChange}
+            />  
           </div>
           <div className='layout-column mb-30'>
             <label htmlFor='duration' className='mb-3'>Duration</label>
@@ -95,24 +94,23 @@ const Form = () => {
               id='duration'
               placeholder='Enter duration in hours or minutes'
               data-testid='durationInput'
-              onChange={handleDuration}
-              value={duration}
+              name='_duration_'
+              onChange={handleChange}
             />
           </div>
           {/* Use this div when time format is invalid */}
-         {error &&<div 
+        {error && <div 
             className='alert error mb-30'
             data-testid='alert'
           >
             Please specify time in hours or minutes (e.g. 2.5h or 150m)
-          </div> }
+          </div>}
           <div className='layout-row justify-content-end'>
             <button 
               type='submit'
               className='mx-0'
               data-testid='addButton'
-              onClick={handleAddMovie}
-              
+              onClick={onSubmit}
             >
               Add Movie
             </button>
@@ -134,11 +132,11 @@ const title = 'Favorite Movie Directory'
           {Form()}
         </div>
         <div className='layout-column w-30'>
-          <Search />
-          <Movieslist movies={movies} /> 
-          <div data-testid='noResult'>
+          <Search searchTearm={searchTearm} setTearm={setTearm} />
+          <Movieslist movies={movie} searchTearm={searchTearm} setResults={setResults}/> 
+          {results && <div data-testid='noResult'>
             <h3 className='text-center'>No Results Found</h3>
-          </div>
+          </div>}
         </div>
       </div> 
     </div>
